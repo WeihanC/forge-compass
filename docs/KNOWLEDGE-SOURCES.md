@@ -1,0 +1,135 @@
+# 知识库源清单
+
+> knowledge-curator 维护这份文档。每加一篇文档，登记一行。
+
+最后更新：Day 1（待补充）
+
+---
+
+## 统计
+
+- 总文档数：0
+- 总 chunks：0
+- 最后灌入时间：N/A
+- 上一次成本：$0
+
+---
+
+## P0：必须有（Day 5 之前完成）
+
+### FDA 宠物食品法规
+
+| 状态 | 文档 | 来源 | 灌入日期 |
+|------|------|------|---------|
+| ⏳ | 21 CFR Part 501 - Food Labeling | https://www.ecfr.gov/current/title-21/chapter-I/subchapter-E/part-501 | - |
+| ⏳ | 21 CFR Part 502 - Common or Usual Name | - | - |
+| ⏳ | 21 CFR Part 507 - Current Good Manufacturing Practice | - | - |
+| ⏳ | FSMA 与宠物食品 | https://www.fda.gov/food/food-safety-modernization-act-fsma | - |
+| ⏳ | FDA Pet Food Establishment Registration 流程 | https://www.fda.gov/animal-veterinary | - |
+
+### Chewy 平台政策与财报
+
+| 状态 | 文档 | 来源 | 灌入日期 |
+|------|------|------|---------|
+| ⏳ | Chewy 2024 Q3 10-Q | https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001766502 | - |
+| ⏳ | Chewy 2024 10-K | - | - |
+| ⏳ | Chewy 商家入驻 FAQ | https://www.chewy.com | - |
+| ⏳ | Chewy Autoship 商家政策 | - | - |
+
+### Amazon 宠物类目政策
+
+| 状态 | 文档 | 来源 | 灌入日期 |
+|------|------|------|---------|
+| ⏳ | Amazon Pet Supplies Category Restrictions | sellercentral.amazon.com | - |
+| ⏳ | Amazon Pet Food Compliance | - | - |
+| ⏳ | Amazon Restricted Products: Animal-related | - | - |
+
+---
+
+## P1：尽快有（Day 14 之前）
+
+### TikTok Shop 美区
+
+| 状态 | 文档 | 来源 | 灌入日期 |
+|------|------|------|---------|
+| ⏳ | TikTok Shop US 类目政策（宠物） | seller-us.tiktok.com | - |
+| ⏳ | TikTok Shop 佣金费率 2025 | - | - |
+
+### 加州 Prop 65
+
+| 状态 | 文档 | 来源 | 灌入日期 |
+|------|------|------|---------|
+| ⏳ | Prop 65 化学物质清单（宠物玩具相关） | https://oehha.ca.gov/proposition-65 | - |
+| ⏳ | Prop 65 警告标签要求 | - | - |
+
+### USDA APHIS
+
+| 状态 | 文档 | 来源 | 灌入日期 |
+|------|------|------|---------|
+| ⏳ | APHIS 宠物用品进口许可 | https://www.aphis.usda.gov | - |
+
+---
+
+## P2：可以有（v0.2 阶段）
+
+### 关税与 HTS
+
+| 状态 | 文档 | 来源 |
+|------|------|------|
+| ⏳ | HTS 宠物用品税号速查（4202、6307、9404） | https://hts.usitc.gov |
+
+### 美国宠物市场数据
+
+| 状态 | 文档 | 来源 |
+|------|------|------|
+| ⏳ | APPA 2024 年度市场报告摘要 | https://www.americanpetproducts.org |
+| ⏳ | Packaged Facts 美国宠物市场 2024 | 公开摘要部分 |
+
+### 各州税务（建仓相关）
+
+| 状态 | 文档 | 来源 |
+|------|------|------|
+| ⏳ | 加州 sales tax + property tax + franchise tax 速查 | - |
+| ⏳ | 德州 sales tax + 仓储税收激励 | - |
+| ⏳ | 内华达建仓优惠政策 | - |
+
+---
+
+## 文档模板
+
+每篇文档放在 `docs/knowledge-sources/<category>/<slug>.md`，格式：
+
+```markdown
+---
+source_url: https://...
+title: 文档标题（中文）
+source_type: fda | chewy | amazon | tiktok | state_reg | market | tariff
+published_date: 2024-09-15
+fetched_date: 2025-11-08
+expires: 2026-03-15
+language: en | zh | mixed
+---
+
+## 中文摘要（200-500 字，供 RAG 中文 query 命中）
+
+[这里写中文摘要，把英文原文的核心规则、数字、流程用中文表述。]
+
+## 关键原文（English）
+
+[这里贴关键段落，不要超过原文 15%。每段保留原始章节号。]
+
+## 中国老板关注点
+
+[1-3 条：这个文档对中国出海卖家最相关的部分。]
+```
+
+---
+
+## 不要灌的内容
+
+- ❌ CSDN / 知乎 / 公众号的"解读"文章
+- ❌ 自媒体新闻报道
+- ❌ 二手数据库（如 Statista 摘要）
+- ❌ 大段版权内容拷贝（>15% 原文）
+- ❌ 过时超过 18 个月的法规（除非历史参考有价值）
+- ❌ 与宠物完全无关的内容
