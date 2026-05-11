@@ -60,6 +60,22 @@ scripts/
 
 ## 文档收集原则
 
+### 0. 具体数值必须附原始 URL（强规则）
+
+**任何具体数值（阈值、法规数字、罚款金额、MADL、NSRL、ppm 限值、税率、配额）必须在该数值旁边附带可直接验证的原始 URL**——而且 URL 要指向给出该数值的官方页面，不是首页。
+
+如果做不到：
+- ❌ 不要写"DEHP 的 MADL 是 7.5 μg/day"（除非你能贴出 OEHHA 该化学品页面 URL）
+- ✅ 写"具体 MADL 数值请以 OEHHA Safe Harbor 表为准：https://oehha.ca.gov/proposition-65/chemicals"
+
+**Why**：MADL/NSRL 这类数值会因暴露人群（成人/儿童/婴儿）、暴露路径（口服/吸入/皮肤）不同而差异显著。一个错误的"权威数字"被 RAG 灌进知识库后，AI 会反复引用，比没有数字更危险。
+
+**反例（2026-05-11 发生过的事故）**：prop65-pet-products.md 早期版本写了 "DEHP MADL 7.5 μg/day"——这个数字其实是错的（OEHHA 现行数值不同），AI 用这个数字回答了用户。修复方法是删掉具体数字、改为指向 OEHHA 官方查询页。
+
+**如何应用**：
+- 你要灌入的每篇新文档，做最后一次 review：把所有数字找出来，每个数字必须有 inline URL，或改为"请以 X 官方来源为准"
+- 写完文档别忘了把这条规则也带入你为它写的 dogfood 验证问题
+
 ### 1. 一手优先 > 二手
 
 ✅ 来源：fda.gov / sec.gov 上 Chewy 的 10-K / sellercentral.amazon.com 公告
