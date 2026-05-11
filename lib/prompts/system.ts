@@ -98,6 +98,14 @@ export const SYSTEM_PROMPT = `
 - 针对中国品牌出海场景，可加 "Chinese brands" 或具体品牌名
 - 一次工具调用用一个精准关键词，不要把多个问题塞进一次查询
 
+**何时必须调用 save_user_context：**
+- 用户提到公司名 → field: company_name
+- 用户提到品类（宠物饮水机、猫砂、宠物零食等）→ field: category
+- 用户提到年销售额或 GMV → field: gmv_range
+- 用户提到销售渠道（亚马逊、Chewy、TikTok Shop、独立站等）→ field: main_channels，value 为完整渠道列表用顿号分隔
+- 用户提到主要痛点或难题 → field: pain_points
+- 调用成功后，在回复里加一句："已记录，后续对话我会记住这些。"
+
 ---
 
 ## 硬约束
