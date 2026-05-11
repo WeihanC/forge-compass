@@ -69,7 +69,7 @@ export function Message({ role, content }: MessageProps) {
         <div
           className={cn(
             'px-4 py-2.5 rounded-2xl rounded-tr-sm',
-            'bg-slate-100 text-slate-900',
+            'bg-muted text-foreground',
             'text-[15px] leading-[1.6] whitespace-pre-wrap',
             'max-w-[90%] sm:max-w-[75%]',
           )}
@@ -80,10 +80,11 @@ export function Message({ role, content }: MessageProps) {
     );
   }
 
-  // assistant 消息：Markdown 渲染 + citation 解析
+  // assistant 消息：Markdown 渲染 + citation 解析 + 🧭 图标
   return (
-    <div className="flex justify-start mb-5">
-      <div className={cn('text-slate-800 text-[15px] leading-[1.6]', 'max-w-[95%] sm:max-w-[85%]')}>
+    <div className="flex justify-start mb-5 gap-3">
+      <span className="text-xl mt-0.5 shrink-0">🧭</span>
+      <div className={cn('text-foreground text-[15px] leading-[1.6]', 'max-w-[95%] sm:max-w-[85%]')}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
@@ -95,26 +96,26 @@ export function Message({ role, content }: MessageProps) {
             ),
             // 列表项也处理 citation
             li: ({ children }) => (
-              <li className="text-slate-700">
+              <li className="text-foreground">
                 <CitationChildren>{children}</CitationChildren>
               </li>
             ),
             // 表格
             table: ({ children }) => (
               <div className="overflow-x-auto my-4">
-                <table className="min-w-full text-sm border-collapse border border-slate-200 rounded-lg overflow-hidden">
+                <table className="min-w-full text-sm border-collapse border border-border rounded-lg overflow-hidden">
                   {children}
                 </table>
               </div>
             ),
-            thead: ({ children }) => <thead className="bg-slate-50">{children}</thead>,
+            thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
             th: ({ children }) => (
-              <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 text-[13px]">
+              <th className="border border-border px-3 py-2 text-left font-semibold text-foreground text-[13px]">
                 {children}
               </th>
             ),
             td: ({ children }) => (
-              <td className="border border-slate-200 px-3 py-2 text-slate-600 text-[13px]">
+              <td className="border border-border px-3 py-2 text-muted-foreground text-[13px]">
                 <CitationChildren>{children}</CitationChildren>
               </td>
             ),
@@ -131,14 +132,14 @@ export function Message({ role, content }: MessageProps) {
               const isBlock = className?.startsWith('language-');
               if (isBlock) {
                 return (
-                  <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 overflow-x-auto my-3 text-[13px] font-mono leading-relaxed">
+                  <pre className="bg-muted text-foreground rounded-lg p-4 overflow-x-auto my-3 text-[13px] font-mono leading-relaxed">
                     <code className={className}>{children}</code>
                   </pre>
                 );
               }
               return (
                 <code
-                  className="bg-slate-100 text-slate-800 px-1 py-0.5 rounded text-[13px] font-mono"
+                  className="bg-muted text-foreground px-1 py-0.5 rounded text-[13px] font-mono"
                   {...props}
                 >
                   {children}
@@ -151,22 +152,22 @@ export function Message({ role, content }: MessageProps) {
             ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
             // 标题
             h1: ({ children }) => (
-              <h1 className="text-xl font-bold mb-3 mt-5 text-slate-900">{children}</h1>
+              <h1 className="text-xl font-bold mb-3 mt-5 text-foreground">{children}</h1>
             ),
             h2: ({ children }) => (
-              <h2 className="text-lg font-semibold mb-2 mt-4 text-slate-900">{children}</h2>
+              <h2 className="text-lg font-semibold mb-2 mt-4 text-foreground">{children}</h2>
             ),
             h3: ({ children }) => (
-              <h3 className="text-base font-semibold mb-2 mt-3 text-slate-800">{children}</h3>
+              <h3 className="text-base font-semibold mb-2 mt-3 text-foreground">{children}</h3>
             ),
             strong: ({ children }) => (
-              <strong className="font-semibold text-slate-900">{children}</strong>
+              <strong className="font-semibold text-foreground">{children}</strong>
             ),
             // 分割线
-            hr: () => <hr className="border-slate-200 my-4" />,
+            hr: () => <hr className="border-border my-4" />,
             // 块引用
             blockquote: ({ children }) => (
-              <blockquote className="border-l-4 border-slate-300 pl-4 py-1 my-3 text-slate-600 italic">
+              <blockquote className="border-l-4 border-border pl-4 py-1 my-3 text-muted-foreground italic">
                 {children}
               </blockquote>
             ),
