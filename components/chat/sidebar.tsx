@@ -1,12 +1,14 @@
 'use client';
 
-import { Plus, User, Sun, Moon } from 'lucide-react';
+import { Plus, User, Sun, Moon, LogOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { createClient } from '@/lib/supabase/client';
 
 interface SidebarProps {
-  userId: string;
+  userEmail: string;
 }
 
 const MOCK_HISTORY = [
@@ -17,8 +19,16 @@ const MOCK_HISTORY = [
   { id: '5', title: '如何避免价格战？' },
 ];
 
-export function Sidebar({ userId }: SidebarProps) {
+export function Sidebar({ userEmail }: SidebarProps) {
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  }
 
   return (
     <aside className="w-[260px] flex flex-col border-r border-border bg-muted/30 shrink-0">
@@ -61,12 +71,21 @@ export function Sidebar({ userId }: SidebarProps) {
         ))}
       </div>
 
-      {/* 底部用户名 */}
-      <div className="border-t border-border px-4 py-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      {/* 底部用户区 */}
+      <div className="border-t border-border px-3 py-3 space-y-2">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
           <User size={14} />
-          <span>{userId}</span>
+          <span className="truncate">{userEmail || '未登录'}</span>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-xs text-muted-foreground h-8"
+          onClick={handleSignOut}
+        >
+          <LogOut size={14} />
+          退出登录
+        </Button>
       </div>
     </aside>
   );

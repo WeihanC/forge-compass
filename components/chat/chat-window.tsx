@@ -2,21 +2,20 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useChat } from 'ai/react';
-import { useSearchParams } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message } from '@/components/chat/message';
 import { Sidebar } from '@/components/chat/sidebar';
 import { EmptyState } from '@/components/chat/empty-state';
 import { InputArea } from '@/components/chat/input-area';
 
-export function ChatWindow() {
-  // 从 URL 参数读取 user_id，例如 ?u=wilson，没有则默认 'default'
-  const searchParams = useSearchParams();
-  const userId = searchParams.get('u') ?? 'default';
+interface ChatWindowProps {
+  userId: string;
+  userEmail: string;
+}
 
+export function ChatWindow({ userId, userEmail }: ChatWindowProps) {
   const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
     api: '/api/chat',
-    body: { userId },
   });
 
   // 自动滚动到最新消息
@@ -34,7 +33,7 @@ export function ChatWindow() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar userId={userId} />
+      <Sidebar userEmail={userEmail} />
 
       <main className="flex-1 flex flex-col overflow-hidden">
         {isEmpty ? (

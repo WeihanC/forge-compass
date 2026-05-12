@@ -7,11 +7,18 @@ import {
   getUserContext,
   formatUserContext,
 } from '@/lib/tools/user-context';
+import { createClient } from '@/lib/supabase/server';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  const { messages, userId = 'anonymous' } = await req.json();
+  const { messages } = await req.json();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? 'anonymous';
 
   const userCtx = await getUserContext(userId);
   const systemWithCtx = SYSTEM_PROMPT + formatUserContext(userCtx);

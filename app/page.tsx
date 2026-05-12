@@ -1,7 +1,13 @@
 import { Suspense } from 'react';
 import { ChatWindow } from '@/components/chat/chat-window';
+import { createClient } from '@/lib/supabase/server';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <Suspense
       fallback={
@@ -10,7 +16,10 @@ export default function HomePage() {
         </div>
       }
     >
-      <ChatWindow />
+      <ChatWindow
+        userId={user?.id ?? 'anonymous'}
+        userEmail={user?.email ?? ''}
+      />
     </Suspense>
   );
 }
