@@ -4,48 +4,118 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* === Forge Compass 设计 tokens（工作台 · light）=== */
+    --accent: #3B82F6;
+    --bg: #FAFAF9;
+    --surface: #FFFFFF;
+    --sb-bg: #F7F7F5;
+    --ink: #0F172A;
+    --ink-2: #1F2937;
+    --ink-mute: #4B5563;
+    --ink-faint: #9CA3AF;
+    --line: #ECECEC;
+    --line-soft: #F2F2F0;
+    --hover: #F0F0EE;
+    --bubble: #F4F4F2;
+    --send-ink: #0F172A;
+    --scroll: #E5E5E2;
+    --scroll-sb: #E0E0DC;
+
+    /* === shadcn 兼容别名（Button / ScrollArea 等仍按原名引用） === */
+    --background: var(--bg);
+    --foreground: var(--ink);
+    --card: var(--surface);
+    --card-foreground: var(--ink);
+    --popover: var(--surface);
+    --popover-foreground: var(--ink);
+    --primary: var(--accent);
+    --primary-foreground: #FFFFFF;
+    --secondary: var(--bubble);
+    --secondary-foreground: var(--ink);
+    --muted: var(--hover);
+    --muted-foreground: var(--ink-mute);
+    --accent-foreground: var(--ink);
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --border: var(--line);
+    --input: var(--line);
+    --ring: var(--accent);
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* === 工作台 · dark === */
+    --accent: #4F8EF7;
+    --bg: #0E0F12;
+    --surface: #15171C;
+    --sb-bg: #0B0C0F;
+    --ink: #ECEDEE;
+    --ink-2: #D4D6D9;
+    --ink-mute: #9BA0A8;
+    --ink-faint: #6B7180;
+    --line: #23262C;
+    --line-soft: #1B1D22;
+    --hover: #1E2026;
+    --bubble: #1E2026;
+    --send-ink: #ECEDEE;
+    --scroll: #2B2F36;
+    --scroll-sb: #2B2F36;
+
+    --background: var(--bg);
+    --foreground: var(--ink);
+    --card: var(--surface);
+    --card-foreground: var(--ink);
+    --popover: var(--surface);
+    --popover-foreground: var(--ink);
+    --primary: var(--accent);
+    --primary-foreground: #FFFFFF;
+    --secondary: var(--bubble);
+    --secondary-foreground: var(--ink);
+    --muted: var(--hover);
+    --muted-foreground: var(--ink-mute);
+    --accent-foreground: var(--ink);
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --border: var(--line);
+    --input: var(--line);
+    --ring: var(--accent);
+  }
+
+  /* === 登录页专属（玻璃质感 + 纯黑底 / 浅灰底） === */
+  .login-page {
+    --accent: #4F8EF7;
+    --bg: #000000;
+    --ink: #E7ECF3;
+    --ink-mute: rgba(231, 236, 243, 0.62);
+    --ink-faint: rgba(231, 236, 243, 0.38);
+    --line: rgba(255, 255, 255, 0.08);
+    --line-soft: rgba(255, 255, 255, 0.05);
+    --card: rgba(10, 14, 22, 0.55);
+    --field: rgba(255, 255, 255, 0.04);
+    --field-focus: rgba(255, 255, 255, 0.06);
+    --ink-2: var(--ink);
+
+    --background: var(--bg);
+    --foreground: var(--ink);
+    --border: var(--line);
+    --input: var(--line);
+    --ring: var(--accent);
+    --primary: var(--accent);
+    --primary-foreground: #FFFFFF;
+    --muted: var(--field);
+    --muted-foreground: var(--ink-mute);
+  }
+  .login-page[data-theme="light"] {
+    --accent: #3B82F6;
+    --bg: #F6F8FB;
+    --ink: #0C1322;
+    --ink-mute: rgba(12, 19, 34, 0.66);
+    --ink-faint: rgba(12, 19, 34, 0.42);
+    --line: rgba(12, 19, 34, 0.10);
+    --line-soft: rgba(12, 19, 34, 0.06);
+    --card: rgba(255, 255, 255, 0.92);
+    --field: rgba(12, 19, 34, 0.04);
+    --field-focus: rgba(12, 19, 34, 0.06);
   }
 }
 
@@ -53,7 +123,9 @@
   * {
     @apply border-border;
   }
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    font-family: "Noto Sans SC", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
