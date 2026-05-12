@@ -8,10 +8,10 @@
 
 ## 统计
 
-- 总文档数：5
-- 总 chunks：待灌入后统计
-- 最后灌入时间：待灌入
-- 上一次成本：$0
+- 总文档数：9
+- 总 chunks：39
+- 最后灌入时间：2026-05-11
+- 上一次成本：~$0.5（embeddings）
 
 ---
 
@@ -21,35 +21,38 @@
 
 | 状态 | 文档 | 来源 | 灌入日期 |
 |------|------|------|---------|
-| ✅ | 21 CFR Part 501 - Pet Food Labeling Requirements | https://www.ecfr.gov/current/title-21/chapter-I/subchapter-E/part-501 | 待灌入 |
-| ⏳ | 21 CFR Part 502 - Common or Usual Name | - | - |
+| ✅ | 21 CFR Part 501 - Pet Food Labeling Requirements | https://www.ecfr.gov/current/title-21/chapter-I/subchapter-E/part-501 | 2026-05-11 |
+| ✅ | 21 CFR Part 502 - Common or Usual Name | https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-502 | 2026-05-11 |
 | ⏳ | 21 CFR Part 507 - Current Good Manufacturing Practice | - | - |
-| ✅ | FSMA Preventive Controls for Animal Food Rule | https://www.fda.gov/food/food-safety-modernization-act-fsma/fsma-rule-preventive-controls-animal-food | 待灌入 |
+| ✅ | FSMA Preventive Controls for Animal Food Rule | https://www.fda.gov/food/food-safety-modernization-act-fsma/fsma-rule-preventive-controls-animal-food | 2026-05-11 |
 | ⏳ | FDA Pet Food Establishment Registration 流程 | https://www.fda.gov/animal-veterinary | - |
 
 **已写入文件：**
 - `docs/knowledge-sources/fda/pet-food-labeling.md` — 21 CFR 501 标签五大必填元素、Guaranteed Analysis、AAFCO 声明、常见违规
 - `docs/knowledge-sources/fda/fsma-pet-food.md` — FDA 工厂注册、食品安全计划、PCQI、FSVP、记录保存 2 年要求
+- `docs/knowledge-sources/fda/21-cfr-502.md` — 通用名称规则、AAFCO 95%/25%/3%/Flavor 规则、翻译陷阱
 
 ### Chewy 平台政策与财报
 
 | 状态 | 文档 | 来源 | 灌入日期 |
 |------|------|------|---------|
-| ⏳ | Chewy 2024 Q3 10-Q | https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001766502 | - |
-| ⏳ | Chewy 2024 10-K | - | - |
-| ⏳ | Chewy 商家入驻 FAQ | https://www.chewy.com | - |
-| ⏳ | Chewy Autoship 商家政策 | - | - |
+| ✅ | Chewy 入驻政策、账期、Autoship（综合 10-K + Vendor 资料） | https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001766502 | 2026-05-11 |
+| ⏳ | Chewy 商家入驻 FAQ（chewy.com 1P/3P） | https://www.chewy.com | - |
+
+**已写入文件：**
+- `docs/knowledge-sources/platform/chewy-vendor-policy.md` — Chewy 入驻路径、Autoship 占比与机制、账期惯例（行业 Net 30/60）、合规要求
 
 ### Amazon 宠物类目政策
 
 | 状态 | 文档 | 来源 | 灌入日期 |
 |------|------|------|---------|
-| ✅ | Amazon Pet Supplies Category Requirements and Compliance | https://sellercentral.amazon.com/help/hub/reference/G200164330 | 待灌入 |
-| ⏳ | Amazon Pet Food Compliance | - | - |
-| ⏳ | Amazon Restricted Products: Animal-related | - | - |
+| ✅ | Amazon Pet Supplies Category Requirements and Compliance | https://sellercentral.amazon.com/help/hub/reference/G200164330 | 2026-05-11 |
+| ✅ | Amazon Restricted Products: Pet & Animal-related | https://sellercentral.amazon.com/help/hub/reference/G200164510 | 2026-05-11 |
+| ⏳ | Amazon Pet Food Compliance（独立文档） | - | - |
 
 **已写入文件：**
 - `docs/knowledge-sources/platform/amazon-pet-category.md` — FDA 注册号要求、drug claim 禁区、UL/ETL 认证、EPA 驱虫登记、封号原因速查表
+- `docs/knowledge-sources/platform/amazon-pet-category-full.md` — 完整 gated category 清单、申请流程、所需文件、审核时长、申诉路径
 
 ---
 
@@ -59,14 +62,16 @@
 
 | 状态 | 文档 | 来源 | 灌入日期 |
 |------|------|------|---------|
-| ⏳ | TikTok Shop US 类目政策（宠物） | seller-us.tiktok.com | - |
-| ⏳ | TikTok Shop 佣金费率 2025 | - | - |
+| ✅ | TikTok Shop US 类目政策（宠物）+ 合规要求 + 佣金口径 | https://seller-us.tiktok.com/university/essay?knowledge_id=5166793187346222 | 2026-05-11 |
+
+**已写入文件：**
+- `docs/knowledge-sources/platform/tiktok-shop-pet-us.md` — 宠物类目开放/禁售清单、Qualification Center 文件要求、佣金口径（具体数值指向 Seller Center 后台）
 
 ### 加州 Prop 65
 
 | 状态 | 文档 | 来源 | 灌入日期 |
 |------|------|------|---------|
-| ✅ | California Proposition 65 and Pet Products | https://oehha.ca.gov/proposition-65 | 待灌入 |
+| ✅ | California Proposition 65 and Pet Products | https://oehha.ca.gov/proposition-65 | 2026-05-11 |
 | ⏳ | Prop 65 化学物质完整清单（宠物玩具相关） | https://oehha.ca.gov/proposition-65/chemicals | - |
 
 **已写入文件：**
@@ -76,7 +81,7 @@
 
 | 状态 | 文档 | 来源 | 灌入日期 |
 |------|------|------|---------|
-| ✅ | FTC Green Guides - Environmental Marketing Claims | https://www.ftc.gov/system/files/documents/federal_register_notices/2012/10/greenguidelines.pdf | 待灌入 |
+| ✅ | FTC Green Guides - Environmental Marketing Claims | https://www.ftc.gov/system/files/documents/federal_register_notices/2012/10/greenguidelines.pdf | 2026-05-11 |
 
 **已写入文件：**
 - `docs/knowledge-sources/regulation/ftc-green-guides.md` — "natural"/"organic"/"eco-friendly" 用词规则、AAFCO natural 定义、NOP organic 认证门槛、可降解/可回收/无毒声明合规要求
