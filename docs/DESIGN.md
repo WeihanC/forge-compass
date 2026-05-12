@@ -289,9 +289,7 @@ box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
   - `value-props`：3 列数字（28px / 700 / tnum）+ 标签（12.5px mute）
   - `intel-ticker`（**DEMO 示例条，规范见 5.9.1，必须显示，不可隐藏**）
 
-#### 5.9.1 Intel ticker（DEMO 规范）
-
-**目标**：让访客在登录前看到产品"实时情报"的能力示意，但**绝对不能让用户误以为是实时数据**——所以必须显式标 DEMO + 底部说明。
+#### 5.9.1 Intel ticker（滚动情报）
 
 **容器**：
 - 1px solid `--line` + radius 14px
@@ -299,41 +297,35 @@ box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
 - 背景：`linear-gradient(180deg, color-mix(in oklab, var(--accent) 4%, transparent), transparent)`
 - `backdrop-filter: blur(8px)`
 
-**顶部 meta 行**（替换原设计稿的 pulse dot + "实时情报" 文案——pulse dot **删除**，避免暗示"跳动 = 实时"）：
+**顶部 meta 行**：左侧脉冲 dot（8x8 圆，pulse 1.6s 动画）+ "实时情报" 标题（13px / 600）+ 右侧 mono 时间戳（11px faint）+ 底部 1px dashed `--line`
 
-```
-情报示例  ·  DEMO
-```
+**滚动机制**：
+- 数据池 ≥ 10 条（涵盖情报 / 合规 / 财报 / 政策 / 市场等多个 tag）
+- 同时显示 3 条，每 3.2s 从顶部移除一条 + 底部新加一条
+- 新条目用 `fadein` 动画进入：opacity 0→1，translateY 4px→0，duration 0.55s
+- 数据池循环使用（用完后从头再来）
 
-- "情报示例"：10.5px / 500 / **大写** / letter-spacing 0.16em / `--ink-mute`
-- "·"：`--ink-faint`
-- "DEMO" badge：10.5px / 600 / `--accent` 文字色 + 1px solid `--accent` + radius 99px + padding `2px 8px`
-- 整行底部 1px dashed `--line` 分隔（保留原设计稿的虚线）
-
-**3 条静态示例条目**（写死，覆盖产品 3 个核心能力：情报 / 合规 / 财报）：
-
-| tag | text | source |
-|-----|------|--------|
-| `[情报]` | 亚马逊宠物 Top 100 中国品牌占比同比 +12% | 来源 · Helium10 |
-| `[合规]` | 加州 Prop 65 新增 3 项化学品（10/02） | 来源 · OEHHA |
-| `[财报]` | Chewy Q3 Autoship 收入占比 80.3% | 来源 · SEC 10-Q |
-
-**每条样式**：
+**条目样式**：
 - grid `auto 1fr auto`，gap 12px，align-items center
-- 三条之间 12px 间距，每两条之间 1px solid `--line-soft` 分隔
-- **不要原设计稿的 fade-in 动画**——静态展示
-- tag：`--accent` / 11.5px / 600 / 方括号原样保留
-- text：`--ink-2` / 13.5px / 1.5 / overflow-ellipsis
+- 三条之间 10px 间距
+- tag：`--accent` 边框 1px + `--accent` 文字 / 10.5px / 600 / mono / 大写 / padding 3px 8px / radius 6px
+- text：`--ink` / 13px / 1.5 / overflow-ellipsis
 - source：`--ink-faint` / 11.5px / 500 / nowrap
 
-**底部说明行**（紧贴 ticker 容器外部，作为承诺文案）：
+**数据池示例**（10 条静态写死，按 tag 平衡）：
 
 ```
-以上为示例展示。登录后可基于你的品类实时查询。
+[情报]  亚马逊宠物 Top 100 中国品牌占比同比 +12%        Helium10
+[合规]  加州 Prop 65 新增 3 项化学品（10/02）            OEHHA
+[财报]  Chewy Q3 Autoship 收入占比 80.3%                  SEC 10-Q
+[市场]  美国宠物食品市场 2024 CAGR 6.2%                   APPA
+[政策]  FDA 加强 FSMA 设施注册抽查                        FDA
+[渠道]  TikTok Shop 美区宠物 GMV 月环比 +18%             eMarketer
+[竞品]  Petlibro 智能饮水机美国新店上线                   Amazon
+[关税]  HTS 4202 部分子目税率调整                         USITC
+[供应链] 山东宠物零食出口同比 +24%                        海关总署
+[趋势]  Chewy 推出 vet care 业务，TAM 扩大               Chewy IR
 ```
-
-- margin-top 16px
-- 11.5px / 500 / `--ink-faint` / text-align: left（与 ticker 对齐）
 
 ### 5.10 登录页 — 表单卡片（`.auth-card`）
 

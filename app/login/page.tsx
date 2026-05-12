@@ -1,14 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { NetworkBg } from '@/components/login/network-bg';
 
-const TICKER_ITEMS = [
-  { tag: '情报', text: '亚马逊宠物 Top 100 中国品牌占比同比 +12%', src: '来源 · Helium10' },
-  { tag: '合规', text: '加州 Prop 65 新增 3 项化学品（10/02）', src: '来源 · OEHHA' },
-  { tag: '财报', text: 'Chewy Q3 Autoship 收入占比 80.3%', src: '来源 · SEC 10-Q' },
+const TICKER_POOL = [
+  { tag: '情报', text: '亚马逊宠物 Top 100 中国品牌占比同比 +12%', src: 'Helium10' },
+  { tag: '合规', text: '加州 Prop 65 新增 3 项化学品', src: 'OEHHA' },
+  { tag: '财报', text: 'Chewy Q3 Autoship 收入占比 80.3%', src: 'SEC 10-Q' },
+  { tag: '市场', text: '美国宠物食品市场 2024 CAGR 6.2%', src: 'APPA' },
+  { tag: '政策', text: 'FDA 加强 FSMA 设施注册抽查', src: 'FDA' },
+  { tag: '渠道', text: 'TikTok Shop 美区宠物 GMV 月环比 +18%', src: 'eMarketer' },
+  { tag: '竞品', text: 'Petlibro 智能饮水机美国新店上线', src: 'Amazon' },
+  { tag: '关税', text: 'HTS 4202 部分子目税率调整', src: 'USITC' },
+  { tag: '供应链', text: '山东宠物零食出口同比 +24%', src: '海关总署' },
+  { tag: '趋势', text: 'Chewy 推出 vet care 业务，TAM 扩大', src: 'Chewy IR' },
 ];
+const VISIBLE_COUNT = 3;
+const ROTATE_MS = 3200;
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,6 +26,18 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
+  const [tickerBase, setTickerBase] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTickerBase((b) => (b + 1) % TICKER_POOL.length);
+    }, ROTATE_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  const visibleItems = Array.from({ length: VISIBLE_COUNT }, (_, i) =>
+    TICKER_POOL[(tickerBase + i) % TICKER_POOL.length],
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,24 +60,15 @@ export default function LoginPage() {
 
   return (
     <div className="login-page relative min-h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] bg-[var(--bg)] text-[var(--ink)]">
-      {/* 背景叠层 */}
+      {/* 背景：网络节点动画 + vignette */}
       <div className="absolute inset-0 pointer-events-none">
+        <NetworkBg color="#4F8EF7" />
         <div
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(60% 50% at 22% 35%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 70%), radial-gradient(80% 60% at 100% 100%, rgba(0,0,0,.7), transparent 60%)',
+              'radial-gradient(60% 50% at 22% 35%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%), radial-gradient(80% 60% at 100% 100%, rgba(0,0,0,.7), transparent 60%)',
             mixBlendMode: 'screen',
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.18]"
-          style={{
-            backgroundImage:
-              'linear-gradient(to right, var(--line) 1px, transparent 1px), linear-gradient(to bottom, var(--line) 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(60% 60% at 30% 40%, #000, transparent 80%)',
-            WebkitMaskImage: 'radial-gradient(60% 60% at 30% 40%, #000, transparent 80%)',
           }}
         />
       </div>
@@ -130,7 +143,7 @@ export default function LoginPage() {
             专为中国宠物用品出海企业家。问 AI 一次决策——市场、合规、渠道、竞品，全部带可验证来源。
           </p>
 
-          {/* Intel ticker DEMO */}
+          {/* Intel ticker（滚动情报） */}
           <div
             className="rounded-[14px] px-4 py-3.5"
             style={{
@@ -140,64 +153,71 @@ export default function LoginPage() {
               backdropFilter: 'blur(8px)',
             }}
           >
-            {/* 顶部 DEMO meta */}
+            {/* 顶部 meta */}
             <div
               className="flex items-center gap-2.5 pb-2.5"
               style={{ borderBottom: '1px dashed var(--line)' }}
             >
               <span
-                className="uppercase"
+                className="w-2 h-2 rounded-full"
                 style={{
-                  fontSize: '10.5px',
-                  fontWeight: 500,
-                  letterSpacing: '0.16em',
-                  color: 'var(--ink-mute)',
+                  background: 'var(--accent)',
+                  animation: 'intel-pulse 1.6s ease-in-out infinite',
                 }}
-              >
-                情报示例
-              </span>
-              <span style={{ color: 'var(--ink-faint)' }}>·</span>
+              />
               <span
-                className="inline-flex items-center rounded-full"
                 style={{
-                  fontSize: '10.5px',
+                  fontSize: '13px',
                   fontWeight: 600,
-                  color: 'var(--accent)',
-                  border: '1px solid var(--accent)',
-                  padding: '2px 8px',
+                  letterSpacing: '0.02em',
+                  color: 'var(--ink)',
                 }}
               >
-                DEMO
+                实时情报
+              </span>
+              <span
+                className="ml-auto font-mono uppercase"
+                style={{
+                  fontSize: '11px',
+                  color: 'var(--ink-faint)',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                LIVE
               </span>
             </div>
 
-            {/* 3 条 */}
-            <div className="flex flex-col pt-3 gap-3">
-              {TICKER_ITEMS.map((item, i) => (
+            {/* 滚动条目 */}
+            <div className="flex flex-col pt-3 gap-2.5" style={{ minHeight: '108px' }}>
+              {visibleItems.map((item, i) => (
                 <div
-                  key={i}
+                  key={`${tickerBase}-${i}`}
                   className="grid items-center gap-3"
                   style={{
                     gridTemplateColumns: 'auto 1fr auto',
-                    paddingBottom: i < TICKER_ITEMS.length - 1 ? '12px' : 0,
-                    borderBottom:
-                      i < TICKER_ITEMS.length - 1 ? '1px solid var(--line-soft)' : 'none',
+                    animation: 'intel-fadein 0.55s ease both',
+                    animationDelay: `${i * 0.08}s`,
                   }}
                 >
                   <span
+                    className="font-mono uppercase rounded-md"
                     style={{
                       color: 'var(--accent)',
-                      fontSize: '11.5px',
+                      border: '1px solid var(--accent)',
+                      fontSize: '10.5px',
                       fontWeight: 600,
+                      padding: '3px 8px',
+                      letterSpacing: '0.06em',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    [{item.tag}]
+                    {item.tag}
                   </span>
                   <span
                     className="truncate"
                     style={{
-                      color: 'var(--ink-2)',
-                      fontSize: '13.5px',
+                      color: 'var(--ink)',
+                      fontSize: '13px',
                       lineHeight: 1.5,
                     }}
                   >
@@ -217,18 +237,6 @@ export default function LoginPage() {
               ))}
             </div>
           </div>
-
-          <p
-            className="m-0"
-            style={{
-              fontSize: '11.5px',
-              fontWeight: 500,
-              color: 'var(--ink-faint)',
-              marginTop: '4px',
-            }}
-          >
-            以上为示例展示。登录后可基于你的品类实时查询。
-          </p>
         </div>
       </aside>
 
@@ -414,6 +422,27 @@ export default function LoginPage() {
           }
           50% {
             background-position: 100% 0%;
+          }
+        }
+        @keyframes intel-pulse {
+          0%,
+          100% {
+            opacity: 0.55;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.2);
+          }
+        }
+        @keyframes intel-fadein {
+          from {
+            opacity: 0;
+            transform: translateY(4px);
+          }
+          to {
+            opacity: 1;
+            transform: none;
           }
         }
       `}</style>
