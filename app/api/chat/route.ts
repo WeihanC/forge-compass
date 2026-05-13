@@ -44,8 +44,38 @@ export async function POST(req: Request) {
   } = await authSb.auth.getUser();
   const userId = user?.id ?? 'anonymous';
 
-  const conversationId: string = clientConvId ?? crypto.randomUUID();
   const admin = getAdmin();
+
+  // 校验 conversationId 归属：防止用户传他人的 conversationId 污染历史
+  let conversationId: string;
+  if (clientConvId) {
+    const { data: conv } = await admin
+      .from('conversations')
+      .select('id, user_id')
+      .eq('id', clientConvId)
+      .maybeSingle();
+
+    if (conv && conv.user_id !== userId) {
+      return Response.json({ error: 'forbidden' }, { status: 403 });
+    }
+
+    if (!conv) {
+      // conversations 表里查不到，再看 chat_messages 是否已有他人写入
+      const { count } = await admin
+        .from('chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('conversation_id', clientConvId);
+
+      if ((count ?? 0) > 0) {
+        return Response.json({ error: 'forbidden' }, { status: 403 });
+      }
+      // count === 0：全新 ID，允许使用
+    }
+
+    conversationId = clientConvId;
+  } else {
+    conversationId = crypto.randomUUID();
+  }
 
   // 写入新的用户消息（仅当最后一条是 user 时——避免重复写历史消息）
   const lastMessage = messages?.[messages.length - 1];
@@ -117,7 +147,8 @@ export async function POST(req: Request) {
         const { error: updErr } = await admin
           .from('conversations')
           .update({ updated_at: new Date().toISOString() })
-          .eq('id', conversationId);
+          .eq('id', conversationId)
+          .eq('user_id', userId);
         if (updErr)
           console.warn('[chat] update conversation updated_at failed:', updErr.message);
       }
