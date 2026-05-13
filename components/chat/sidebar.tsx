@@ -1,6 +1,7 @@
 'use client';
 
-import { Plus, Search, Sun, Moon, LogOut, Sparkles, PanelLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Plus, Search, Sun, Moon, LogOut, Sparkles } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -20,8 +21,11 @@ const HISTORY_WEEK = [
 ];
 
 export function Sidebar({ userEmail }: SidebarProps) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -31,7 +35,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
   }
 
   const initial = (userEmail || '?').trim().charAt(0).toUpperCase();
-  const isDark = theme === 'dark';
+  const isDark = mounted && resolvedTheme === 'dark';
 
   return (
     <aside className="w-[260px] shrink-0 flex flex-col gap-1.5 p-2.5 bg-sb-bg border-r border-line">
@@ -51,8 +55,9 @@ export function Sidebar({ userEmail }: SidebarProps) {
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
           aria-label="切换深色模式"
           className="w-[26px] h-[26px] rounded-md flex items-center justify-center text-ink-faint hover:bg-hover hover:text-ink"
+          suppressHydrationWarning
         >
-          {isDark ? <Sun size={15} /> : <Moon size={15} />}
+          {mounted ? isDark ? <Sun size={15} /> : <Moon size={15} /> : null}
         </button>
       </div>
 
