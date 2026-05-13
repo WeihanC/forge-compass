@@ -33,17 +33,18 @@ export function EmptyState({ onPromptSelect }: EmptyStateProps) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
       <div
-        className="w-12 h-12 rounded-[14px] flex items-center justify-center text-white mb-[18px]"
+        className="w-10 h-10 md:w-12 md:h-12 rounded-[14px] flex items-center justify-center text-white mb-[18px]"
         style={{
           background: 'var(--accent)',
           boxShadow:
             'inset 0 1px 0 rgba(255,255,255,.25), 0 8px 24px color-mix(in oklab, var(--accent) 25%, transparent)',
         }}
       >
-        <Sparkles size={22} />
+        <Sparkles size={20} className="md:hidden" />
+        <Sparkles size={22} className="hidden md:block" />
       </div>
 
-      <h1 className="m-0 mb-2 text-[26px] font-semibold tracking-[-0.01em]">
+      <h1 className="m-0 mb-2 text-[22px] md:text-[26px] font-semibold tracking-[-0.01em]">
         有什么可以帮你？
       </h1>
       <p className="m-0 mb-7 text-ink-mute text-[14px]">

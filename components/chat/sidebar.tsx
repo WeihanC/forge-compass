@@ -10,6 +10,7 @@ interface SidebarProps {
   userEmail: string;
   currentConversationId: string | null;
   refreshKey: number;
+  open: boolean;
   onSelectConversation: (id: string) => void;
   onNewChat: () => void;
 }
@@ -38,6 +39,7 @@ export function Sidebar({
   userEmail,
   currentConversationId,
   refreshKey,
+  open,
   onSelectConversation,
   onNewChat,
 }: SidebarProps) {
@@ -73,7 +75,12 @@ export function Sidebar({
   const { todayList, weekList, olderList } = groupByTime(conversations);
 
   return (
-    <aside className="w-[260px] shrink-0 flex flex-col gap-1.5 p-2.5 bg-sb-bg border-r border-line">
+    <aside
+      className={`w-[260px] shrink-0 flex flex-col gap-1.5 p-2.5 bg-sb-bg border-r border-line
+        fixed inset-y-0 left-0 z-50 transition-transform duration-200 ease-out
+        md:relative md:translate-x-0 md:z-auto md:transition-none
+        ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+    >
       {/* 顶部：logo + brand + 主题切换 */}
       <div className="flex items-center gap-2 p-2">
         <div

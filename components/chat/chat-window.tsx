@@ -15,14 +15,17 @@ export function ChatWindow({ userId, userEmail }: ChatWindowProps) {
   const [initialMessages, setInitialMessages] = useState<AiMessage[]>([]);
   const [switchKey, setSwitchKey] = useState(0);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleNewChat = useCallback(() => {
     setConversationId(null);
     setInitialMessages([]);
     setSwitchKey((k) => k + 1);
+    setSidebarOpen(false);
   }, []);
 
   const handleSelectConversation = useCallback(async (id: string) => {
+    setSidebarOpen(false);
     if (id === conversationId) return;
     try {
       const res = await fetch(`/api/conversations/${id}`);
@@ -39,7 +42,6 @@ export function ChatWindow({ userId, userEmail }: ChatWindowProps) {
 
   const handleConversationIdAssigned = useCallback((id: string) => {
     setConversationId((prev) => prev ?? id);
-    // 新对话首次拿到 id 后，刷新一次侧栏（让新建对话立刻出现）
     setSidebarRefreshKey((k) => k + 1);
   }, []);
 
@@ -48,11 +50,21 @@ export function ChatWindow({ userId, userEmail }: ChatWindowProps) {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg text-ink">
+    <div className="flex h-[100dvh] overflow-hidden bg-bg text-ink">
+      {/* 移动端遮罩 */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden
+        />
+      )}
+
       <Sidebar
         userEmail={userEmail}
         currentConversationId={conversationId}
         refreshKey={sidebarRefreshKey}
+        open={sidebarOpen}
         onSelectConversation={handleSelectConversation}
         onNewChat={handleNewChat}
       />
@@ -62,6 +74,7 @@ export function ChatWindow({ userId, userEmail }: ChatWindowProps) {
         initialMessages={initialMessages}
         onConversationIdAssigned={handleConversationIdAssigned}
         onAssistantFinished={handleAssistantFinished}
+        onSidebarOpen={() => setSidebarOpen(true)}
       />
     </div>
   );

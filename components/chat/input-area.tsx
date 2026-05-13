@@ -27,7 +27,7 @@ export function InputArea({ input, isLoading, onInputChange, onSubmit }: InputAr
   return (
     <form onSubmit={onSubmit} className="max-w-[740px] mx-auto">
       <div
-        className="flex items-end gap-1.5"
+        className="flex items-end gap-1.5 rounded-[18px] md:rounded-[22px] pl-3 md:pl-[18px] pr-1.5 py-1.5"
         style={{
           background: 'var(--surface)',
           border: `1px solid ${
@@ -35,8 +35,6 @@ export function InputArea({ input, isLoading, onInputChange, onSubmit }: InputAr
               ? 'color-mix(in oklab, var(--accent) 35%, var(--line))'
               : 'var(--line)'
           }`,
-          borderRadius: '22px',
-          padding: '6px 6px 6px 18px',
           boxShadow: focused
             ? '0 1px 4px rgba(0,0,0,.04), 0 0 0 4px color-mix(in oklab, var(--accent) 12%, transparent)'
             : '0 1px 4px rgba(0,0,0,.04)',
@@ -52,11 +50,10 @@ export function InputArea({ input, isLoading, onInputChange, onSubmit }: InputAr
           placeholder="问出海罗盘任何关于宠物用品出海的问题…"
           disabled={isLoading}
           rows={1}
-          className="flex-1 bg-transparent border-0 outline-none resize-none text-ink placeholder:text-ink-faint"
+          className="flex-1 bg-transparent border-0 outline-none resize-none text-ink placeholder:text-ink-faint text-base md:text-[14.5px]"
           style={{
-            fontSize: '14.5px',
             lineHeight: 1.55,
-            padding: '12px 0',
+            padding: '10px 0',
             maxHeight: '200px',
           }}
           onInput={(e) => {
@@ -67,19 +64,19 @@ export function InputArea({ input, isLoading, onInputChange, onSubmit }: InputAr
         />
 
         {/* 左下角工具按钮（仅 UI） */}
-        <div className="flex items-center gap-0.5 pb-1.5">
+        <div className="flex items-center gap-0.5 pb-1">
           <button
             type="button"
             title="附件（即将开放）"
             disabled
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-ink-mute opacity-40"
+            className="hidden md:flex w-8 h-8 rounded-lg items-center justify-center text-ink-mute opacity-40"
           >
             <Paperclip size={16} />
           </button>
           <button
             type="button"
             title="联网搜索（默认开启）"
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-hover"
+            className="hidden md:flex w-8 h-8 rounded-lg items-center justify-center hover:bg-hover"
             style={{
               color: 'var(--accent)',
               background: 'color-mix(in oklab, var(--accent) 10%, transparent)',

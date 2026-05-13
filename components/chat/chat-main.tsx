@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useChat, type Message as AiMessage } from 'ai/react';
-import { ChevronDown, Share2, MoreHorizontal, Sparkles } from 'lucide-react';
+import { ChevronDown, Share2, MoreHorizontal, Sparkles, Menu } from 'lucide-react';
 import { Message } from '@/components/chat/message';
 import { EmptyState } from '@/components/chat/empty-state';
 import { InputArea } from '@/components/chat/input-area';
@@ -12,6 +12,7 @@ interface ChatMainProps {
   initialMessages: AiMessage[];
   onConversationIdAssigned: (id: string) => void;
   onAssistantFinished: () => void;
+  onSidebarOpen: () => void;
 }
 
 const TOOL_LABELS: Record<string, string> = {
@@ -25,6 +26,7 @@ export function ChatMain({
   initialMessages,
   onConversationIdAssigned,
   onAssistantFinished,
+  onSidebarOpen,
 }: ChatMainProps) {
   // conversationId 通过 ref 暴露给提交时使用——避免闭包捕获 stale 值
   const convIdRef = useRef(conversationId);
@@ -77,12 +79,19 @@ export function ChatMain({
   }
 
   return (
-    <main className="flex-1 flex flex-col min-w-0 h-screen bg-surface">
+    <main className="flex-1 flex flex-col min-w-0 h-[100dvh] bg-surface">
       {/* 顶栏 */}
-      <header className="flex items-center gap-2.5 px-[18px] py-2.5 border-b border-line-soft">
+      <header className="flex items-center gap-1.5 md:gap-2.5 px-3 md:px-[18px] py-2.5 border-b border-line-soft">
+        <button
+          onClick={onSidebarOpen}
+          aria-label="打开菜单"
+          className="md:hidden w-8 h-8 rounded-[7px] text-ink-mute flex items-center justify-center hover:bg-hover hover:text-ink"
+        >
+          <Menu size={18} />
+        </button>
         <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-[7px] text-[12.5px] text-ink-mute hover:bg-hover hover:text-ink">
           <span className="font-semibold text-ink">出海罗盘</span>
-          <span className="text-ink-faint">· 情报版</span>
+          <span className="hidden md:inline text-ink-faint">· 情报版</span>
           <ChevronDown size={14} />
         </button>
         <div className="ml-auto flex items-center gap-1">
@@ -163,7 +172,7 @@ export function ChatMain({
       </div>
 
       {/* 输入区 */}
-      <div className="px-6 pt-2 pb-[18px]">
+      <div className="px-3 md:px-6 pt-2 pb-[14px] md:pb-[18px]">
         <InputArea
           input={input}
           isLoading={isLoading}

@@ -170,7 +170,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page relative min-h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] bg-[var(--bg)] text-[var(--ink)]">
+    <div className="login-page relative min-h-[100dvh] overflow-hidden grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] bg-[var(--bg)] text-[var(--ink)]">
       {/* 背景 */}
       <div className="absolute inset-0 pointer-events-none">
         <NetworkBg color="#4F8EF7" />
@@ -185,7 +185,7 @@ export default function LoginPage() {
       </div>
 
       {/* 左侧品牌区 */}
-      <aside className="relative z-10 hidden lg:flex flex-col gap-10 px-14 py-10 min-h-screen">
+      <aside className="relative z-10 hidden lg:flex flex-col gap-10 px-14 py-10 min-h-[100dvh]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div
@@ -348,14 +348,14 @@ export default function LoginPage() {
       </aside>
 
       {/* 右侧登录卡 */}
-      <main className="relative z-10 flex items-center justify-center px-6 sm:px-14 py-10 min-h-screen">
+      <main className="relative z-10 flex items-center justify-center px-4 sm:px-14 py-8 sm:py-10 min-h-[100dvh]">
         <div
           className="relative w-full max-w-[440px]"
           style={{
             background: 'var(--card)',
             border: '1px solid var(--line)',
             borderRadius: '20px',
-            padding: '36px 36px 28px',
+            padding: 'clamp(22px, 5vw, 36px) clamp(22px, 5vw, 36px) clamp(22px, 4vw, 28px)',
             backdropFilter: 'blur(20px) saturate(150%)',
             WebkitBackdropFilter: 'blur(20px) saturate(150%)',
             boxShadow:
@@ -415,11 +415,10 @@ export default function LoginPage() {
                       onBlur={() => setEmailFocused(false)}
                       disabled={loading}
                       autoFocus
-                      className="flex-1 bg-transparent border-0 outline-none"
+                      className="flex-1 bg-transparent border-0 outline-none text-base md:text-[14px]"
                       style={{
                         color: 'var(--ink)',
                         padding: '11px 0',
-                        fontSize: '14px',
                         letterSpacing: '0.01em',
                       }}
                     />
