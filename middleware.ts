@@ -39,6 +39,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // /admin 路径：必须登录 + 邮箱在 ADMIN_EMAILS 白名单
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!user || !adminEmails.includes(user.email ?? '')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }
 
