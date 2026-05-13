@@ -185,7 +185,7 @@ export default function LoginPage() {
       </div>
 
       {/* 左侧品牌区 */}
-      <aside className="relative z-10 hidden lg:flex flex-col gap-10 px-14 py-10 min-h-[100dvh]">
+      <aside className="relative z-10 flex flex-col gap-6 lg:gap-10 px-6 sm:px-10 lg:px-14 pt-8 lg:pt-10 pb-4 lg:pb-10 lg:min-h-[100dvh]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div
@@ -226,7 +226,7 @@ export default function LoginPage() {
               fontWeight: 700,
               lineHeight: 1.05,
               letterSpacing: '-0.01em',
-              fontSize: 'clamp(40px, 4.2vw, 64px)',
+              fontSize: 'clamp(28px, 6vw, 64px)',
             }}
           >
             <span style={{ color: 'var(--ink)' }}>把握全球商机</span>
@@ -348,7 +348,7 @@ export default function LoginPage() {
       </aside>
 
       {/* 右侧登录卡 */}
-      <main className="relative z-10 flex items-center justify-center px-4 sm:px-14 py-8 sm:py-10 min-h-[100dvh]">
+      <main className="relative z-10 flex items-center justify-center px-4 sm:px-10 lg:px-14 py-6 lg:py-10 lg:min-h-[100dvh]">
         <div
           className="relative w-full max-w-[440px]"
           style={{
