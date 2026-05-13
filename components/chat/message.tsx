@@ -131,18 +131,22 @@ function CitePreview({
     </div>
   );
 
+  const openUrl = () => {
+    if (source.url) window.open(source.url, '_blank', 'noopener,noreferrer');
+  };
+
+  // 桌面：hover 弹卡，click 直接开 URL
   if (canHover) {
     return (
       <HoverCard openDelay={150} closeDelay={120}>
         <HoverCardTrigger asChild>
-          <a
-            href={source.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline align-middle"
+          <button
+            type="button"
+            onClick={openUrl}
+            className="inline-block align-middle cursor-pointer p-0 border-0 bg-transparent"
           >
             {children}
-          </a>
+          </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-3" sideOffset={6}>
           {card}
@@ -151,10 +155,14 @@ function CitePreview({
     );
   }
 
+  // 移动：tap 弹 popover（不直接开 URL，卡里有 URL 链接）
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button type="button" className="inline-block align-middle">
+        <button
+          type="button"
+          className="inline-block align-middle cursor-pointer p-0 border-0 bg-transparent"
+        >
           {children}
         </button>
       </PopoverTrigger>
