@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus, Search, Sun, Moon, LogOut, Sparkles } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
@@ -8,24 +8,58 @@ import { createClient } from '@/lib/supabase/client';
 
 interface SidebarProps {
   userEmail: string;
+  currentConversationId: string | null;
+  refreshKey: number;
+  onSelectConversation: (id: string) => void;
+  onNewChat: () => void;
 }
 
-const HISTORY_TODAY = [
-  { id: '1', t: 'Amazon vs Chewy 哪个先做？' },
-  { id: '2', t: '宠物饮水机类目竞争分析' },
-  { id: '3', t: 'FDA 标签合规自查' },
-];
-const HISTORY_WEEK = [
-  { id: '4', t: '美西仓 vs FBA 成本对比' },
-  { id: '5', t: '如何避免价格战？' },
-];
+type Conv = { id: string; title: string; last_active: string };
 
-export function Sidebar({ userEmail }: SidebarProps) {
+function groupByTime(convs: Conv[]) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  const todayList: Conv[] = [];
+  const weekList: Conv[] = [];
+  const olderList: Conv[] = [];
+  for (const c of convs) {
+    const t = new Date(c.last_active);
+    if (t >= today) todayList.push(c);
+    else if (t >= weekAgo) weekList.push(c);
+    else olderList.push(c);
+  }
+  return { todayList, weekList, olderList };
+}
+
+export function Sidebar({
+  userEmail,
+  currentConversationId,
+  refreshKey,
+  onSelectConversation,
+  onNewChat,
+}: SidebarProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [conversations, setConversations] = useState<Conv[]>([]);
 
   useEffect(() => setMounted(true), []);
+
+  const fetchConversations = useCallback(async () => {
+    try {
+      const res = await fetch('/api/conversations');
+      if (!res.ok) return;
+      const data = (await res.json()) as { conversations?: Conv[] };
+      setConversations(data.conversations ?? []);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations, refreshKey]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -36,6 +70,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
 
   const initial = (userEmail || '?').trim().charAt(0).toUpperCase();
   const isDark = mounted && resolvedTheme === 'dark';
+  const { todayList, weekList, olderList } = groupByTime(conversations);
 
   return (
     <aside className="w-[260px] shrink-0 flex flex-col gap-1.5 p-2.5 bg-sb-bg border-r border-line">
@@ -50,7 +85,9 @@ export function Sidebar({ userEmail }: SidebarProps) {
         >
           <Sparkles size={14} />
         </div>
-        <span className="text-[14.5px] font-semibold tracking-[0.01em] flex-1">出海罗盘</span>
+        <span className="text-[14.5px] font-semibold tracking-[0.01em] flex-1">
+          出海罗盘
+        </span>
         <button
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
           aria-label="切换深色模式"
@@ -63,6 +100,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
 
       {/* 新对话 */}
       <button
+        onClick={onNewChat}
         className="flex items-center gap-2.5 w-full px-2.5 py-2.5 rounded-lg text-[13.5px] font-medium text-ink border border-line bg-surface hover:bg-hover"
       >
         <Plus size={15} />
@@ -75,34 +113,46 @@ export function Sidebar({ userEmail }: SidebarProps) {
         <span>搜索对话</span>
       </button>
 
-      {/* 今天 */}
-      <div className="px-2.5 pt-3.5 pb-1 text-[11px] font-semibold text-ink-faint uppercase tracking-[0.04em]">
-        今天
-      </div>
-      <div className="flex flex-col gap-[1px]">
-        {HISTORY_TODAY.map((item) => (
-          <button
-            key={item.id}
-            className="flex items-center gap-2 px-2.5 py-2 rounded-[7px] text-[13px] text-ink-2 truncate text-left hover:bg-hover"
-          >
-            <span className="truncate">{item.t}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* 本周 */}
-      <div className="px-2.5 pt-3.5 pb-1 text-[11px] font-semibold text-ink-faint uppercase tracking-[0.04em]">
-        本周
-      </div>
-      <div className="flex flex-col gap-[1px] flex-1 overflow-y-auto min-h-0">
-        {HISTORY_WEEK.map((item) => (
-          <button
-            key={item.id}
-            className="flex items-center gap-2 px-2.5 py-2 rounded-[7px] text-[13px] text-ink-2 truncate text-left hover:bg-hover"
-          >
-            <span className="truncate">{item.t}</span>
-          </button>
-        ))}
+      {/* 历史列表 */}
+      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+        {conversations.length === 0 ? (
+          <div className="px-2.5 pt-4 text-[12px] text-ink-faint">
+            还没有对话历史
+          </div>
+        ) : (
+          <>
+            {todayList.length > 0 && (
+              <>
+                <SectionTitle>今天</SectionTitle>
+                <ItemList
+                  items={todayList}
+                  activeId={currentConversationId}
+                  onSelect={onSelectConversation}
+                />
+              </>
+            )}
+            {weekList.length > 0 && (
+              <>
+                <SectionTitle>本周</SectionTitle>
+                <ItemList
+                  items={weekList}
+                  activeId={currentConversationId}
+                  onSelect={onSelectConversation}
+                />
+              </>
+            )}
+            {olderList.length > 0 && (
+              <>
+                <SectionTitle>更早</SectionTitle>
+                <ItemList
+                  items={olderList}
+                  activeId={currentConversationId}
+                  onSelect={onSelectConversation}
+                />
+              </>
+            )}
+          </>
+        )}
       </div>
 
       {/* 底部用户区 */}
@@ -133,5 +183,45 @@ export function Sidebar({ userEmail }: SidebarProps) {
         </div>
       </div>
     </aside>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-2.5 pt-3.5 pb-1 text-[11px] font-semibold text-ink-faint uppercase tracking-[0.04em]">
+      {children}
+    </div>
+  );
+}
+
+function ItemList({
+  items,
+  activeId,
+  onSelect,
+}: {
+  items: Conv[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-[1px]">
+      {items.map((item) => {
+        const isActive = item.id === activeId;
+        return (
+          <button
+            key={item.id}
+            onClick={() => onSelect(item.id)}
+            title={item.title}
+            className={`flex items-center gap-2 px-2.5 py-2 rounded-[7px] text-[13px] truncate text-left ${
+              isActive
+                ? 'bg-surface text-ink font-medium shadow-[0_0_0_1px_var(--line)]'
+                : 'text-ink-2 hover:bg-hover'
+            }`}
+          >
+            <span className="truncate">{item.title}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
