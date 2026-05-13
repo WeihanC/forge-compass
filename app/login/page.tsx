@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Mail, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { Mail, ArrowRight, Loader2, KeyRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { NetworkBg } from '@/components/login/network-bg';
 
@@ -19,14 +20,19 @@ const TICKER_POOL = [
 ];
 const VISIBLE_COUNT = 3;
 const ROTATE_MS = 3200;
+const RESEND_SECONDS = 60;
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState<string[]>(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [focused, setFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const [tickerBase, setTickerBase] = useState(0);
+  const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -35,32 +41,137 @@ export default function LoginPage() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const id = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(id);
+  }, [countdown]);
+
+  useEffect(() => {
+    if (step === 'code') codeRefs.current[0]?.focus();
+  }, [step]);
+
   const visibleItems = Array.from({ length: VISIBLE_COUNT }, (_, i) =>
     TICKER_POOL[(tickerBase + i) % TICKER_POOL.length],
   );
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email) return;
+  async function sendOtp() {
     setLoading(true);
     setError(null);
-
     const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback`;
-
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: redirectTo },
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
-
     setLoading(false);
-    if (err) setError(err.message);
-    else setSent(true);
+    if (err) {
+      setError(err.message);
+      return false;
+    }
+    return true;
+  }
+
+  async function handleSendEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) return;
+    const ok = await sendOtp();
+    if (ok) {
+      setStep('code');
+      setCountdown(RESEND_SECONDS);
+      setCode(['', '', '', '', '', '']);
+    }
+  }
+
+  async function handleResend() {
+    if (countdown > 0) return;
+    const ok = await sendOtp();
+    if (ok) {
+      setCountdown(RESEND_SECONDS);
+      setCode(['', '', '', '', '', '']);
+      codeRefs.current[0]?.focus();
+    }
+  }
+
+  async function verifyCode(token: string) {
+    setLoading(true);
+    setError(null);
+    const supabase = createClient();
+    const { error: err } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
+    });
+    setLoading(false);
+    if (err) {
+      setError('验证码错误或已过期，请重试');
+      setCode(['', '', '', '', '', '']);
+      codeRefs.current[0]?.focus();
+      return;
+    }
+    router.push('/');
+    router.refresh();
+  }
+
+  function setDigit(idx: number, val: string) {
+    const next = [...code];
+    next[idx] = val;
+    setCode(next);
+    if (val && idx < 5) codeRefs.current[idx + 1]?.focus();
+    if (next.every((c) => c.length === 1)) {
+      verifyCode(next.join(''));
+    }
+  }
+
+  function handleCodeChange(idx: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value.replace(/\D/g, '');
+    if (!v) {
+      setDigit(idx, '');
+      return;
+    }
+    if (v.length > 1) {
+      // 用户在单个框里粘贴了多位
+      handlePasteString(v, idx);
+      return;
+    }
+    setDigit(idx, v);
+  }
+
+  function handlePasteString(raw: string, startIdx = 0) {
+    const digits = raw.replace(/\D/g, '').slice(0, 6 - startIdx);
+    if (!digits) return;
+    const next = [...code];
+    for (let i = 0; i < digits.length; i++) {
+      next[startIdx + i] = digits[i];
+    }
+    setCode(next);
+    const lastIdx = Math.min(startIdx + digits.length, 5);
+    codeRefs.current[lastIdx]?.focus();
+    if (next.every((c) => c.length === 1)) {
+      verifyCode(next.join(''));
+    }
+  }
+
+  function handleCodePaste(e: React.ClipboardEvent<HTMLInputElement>, idx: number) {
+    e.preventDefault();
+    handlePasteString(e.clipboardData.getData('text'), idx);
+  }
+
+  function handleCodeKeyDown(idx: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace' && !code[idx] && idx > 0) {
+      codeRefs.current[idx - 1]?.focus();
+    } else if (e.key === 'ArrowLeft' && idx > 0) {
+      codeRefs.current[idx - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && idx < 5) {
+      codeRefs.current[idx + 1]?.focus();
+    }
   }
 
   return (
     <div className="login-page relative min-h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] bg-[var(--bg)] text-[var(--ink)]">
-      {/* 背景：网络节点动画 + vignette */}
+      {/* 背景 */}
       <div className="absolute inset-0 pointer-events-none">
         <NetworkBg color="#4F8EF7" />
         <div
@@ -73,9 +184,8 @@ export default function LoginPage() {
         />
       </div>
 
-      {/* 左侧：品牌区（移动端隐藏） */}
+      {/* 左侧品牌区 */}
       <aside className="relative z-10 hidden lg:flex flex-col gap-10 px-14 py-10 min-h-screen">
-        {/* 顶部 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div
@@ -91,7 +201,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* 中部 */}
         <div className="flex-1 flex flex-col justify-center gap-7 max-w-[600px]">
           <div
             className="inline-flex items-center gap-2.5 font-mono uppercase"
@@ -143,7 +252,7 @@ export default function LoginPage() {
             专为中国宠物用品出海企业家。问 AI 一次决策——市场、合规、渠道、竞品，全部带可验证来源。
           </p>
 
-          {/* Intel ticker（滚动情报） */}
+          {/* Intel ticker */}
           <div
             className="rounded-[14px] px-4 py-3.5"
             style={{
@@ -153,7 +262,6 @@ export default function LoginPage() {
               backdropFilter: 'blur(8px)',
             }}
           >
-            {/* 顶部 meta */}
             <div
               className="flex items-center gap-2.5 pb-2.5"
               style={{ borderBottom: '1px dashed var(--line)' }}
@@ -187,7 +295,6 @@ export default function LoginPage() {
               </span>
             </div>
 
-            {/* 滚动条目 */}
             <div className="flex flex-col pt-3 gap-2.5" style={{ minHeight: '108px' }}>
               {visibleItems.map((item, i) => (
                 <div
@@ -240,7 +347,7 @@ export default function LoginPage() {
         </div>
       </aside>
 
-      {/* 右侧：登录卡 */}
+      {/* 右侧登录卡 */}
       <main className="relative z-10 flex items-center justify-center px-6 sm:px-14 py-10 min-h-screen">
         <div
           className="relative w-full max-w-[440px]"
@@ -255,44 +362,7 @@ export default function LoginPage() {
               '0 1px 0 rgba(255,255,255,.06) inset, 0 30px 80px rgba(0,0,0,.45)',
           }}
         >
-          {sent ? (
-            <div className="flex flex-col items-center text-center py-2">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                style={{
-                  border: '1.5px solid var(--accent)',
-                  color: 'var(--accent)',
-                }}
-              >
-                <CheckCircle2 size={32} />
-              </div>
-              <h3 className="m-0 mb-1.5" style={{ fontSize: '20px', fontWeight: 700 }}>
-                登录链接已发送
-              </h3>
-              <p
-                className="m-0 mb-5"
-                style={{ color: 'var(--ink-mute)', fontSize: '13.5px' }}
-              >
-                请到 <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{email}</span> 邮箱查收，点击链接即可登录。
-              </p>
-              <button
-                onClick={() => {
-                  setSent(false);
-                  setEmail('');
-                }}
-                className="rounded-lg"
-                style={{
-                  background: 'var(--field)',
-                  border: '1px solid var(--line)',
-                  color: 'var(--ink-mute)',
-                  padding: '9px 18px',
-                  fontSize: '12.5px',
-                }}
-              >
-                换一个邮箱
-              </button>
-            </div>
-          ) : (
+          {step === 'email' ? (
             <>
               <div className="mb-5">
                 <h2
@@ -302,11 +372,11 @@ export default function LoginPage() {
                   登录
                 </h2>
                 <p className="m-0" style={{ color: 'var(--ink-mute)', fontSize: '13.5px' }}>
-                  输入邮箱，我们给你发一个登录链接。无密码、无注册。
+                  输入邮箱，我们会给你发一个 6 位验证码。无密码、无注册。
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-1">
+              <form onSubmit={handleSendEmail} className="flex flex-col gap-1">
                 <div className="flex flex-col gap-1.5">
                   <label
                     style={{
@@ -321,14 +391,14 @@ export default function LoginPage() {
                   <div
                     className="flex items-center gap-2 rounded-[10px]"
                     style={{
-                      background: focused ? 'var(--field-focus)' : 'var(--field)',
+                      background: emailFocused ? 'var(--field-focus)' : 'var(--field)',
                       border: `1px solid ${
-                        focused
+                        emailFocused
                           ? 'color-mix(in oklab, var(--accent) 45%, transparent)'
                           : 'var(--line)'
                       }`,
                       padding: '0 12px',
-                      boxShadow: focused
+                      boxShadow: emailFocused
                         ? '0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent)'
                         : 'none',
                       transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s',
@@ -341,8 +411,8 @@ export default function LoginPage() {
                       placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      onFocus={() => setFocused(true)}
-                      onBlur={() => setFocused(false)}
+                      onFocus={() => setEmailFocused(true)}
+                      onBlur={() => setEmailFocused(false)}
                       disabled={loading}
                       autoFocus
                       className="flex-1 bg-transparent border-0 outline-none"
@@ -358,11 +428,7 @@ export default function LoginPage() {
 
                 {error && (
                   <p
-                    style={{
-                      fontSize: '11.5px',
-                      color: '#EF4444',
-                      marginTop: '6px',
-                    }}
+                    style={{ fontSize: '11.5px', color: '#EF4444', marginTop: '6px' }}
                   >
                     {error}
                   </p>
@@ -392,7 +458,7 @@ export default function LoginPage() {
                     </>
                   ) : (
                     <>
-                      发送登录链接
+                      发送验证码
                       <ArrowRight size={16} />
                     </>
                   )}
@@ -407,7 +473,138 @@ export default function LoginPage() {
                   color: 'var(--ink-mute)',
                 }}
               >
-                登录即表示同意 <span style={{ color: 'var(--ink)' }}>服务条款</span> 与 <span style={{ color: 'var(--ink)' }}>隐私政策</span>
+                登录即表示同意 <span style={{ color: 'var(--ink)' }}>服务条款</span> 与{' '}
+                <span style={{ color: 'var(--ink)' }}>隐私政策</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mb-5 flex flex-col items-center text-center">
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center mb-3.5"
+                  style={{
+                    border: '1.5px solid var(--accent)',
+                    color: 'var(--accent)',
+                  }}
+                >
+                  <KeyRound size={26} />
+                </div>
+                <h2
+                  className="m-0 mb-1.5"
+                  style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.01em' }}
+                >
+                  输入验证码
+                </h2>
+                <p
+                  className="m-0"
+                  style={{ color: 'var(--ink-mute)', fontSize: '13.5px' }}
+                >
+                  验证码已发送到{' '}
+                  <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{email}</span>
+                  ，请查收。
+                </p>
+              </div>
+
+              <div className="flex justify-center gap-2 mb-4">
+                {code.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => {
+                      codeRefs.current[i] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={1}
+                    value={digit}
+                    disabled={loading}
+                    onChange={(e) => handleCodeChange(i, e)}
+                    onKeyDown={(e) => handleCodeKeyDown(i, e)}
+                    onPaste={(e) => handleCodePaste(e, i)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    className="font-mono text-center outline-none transition-all"
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '10px',
+                      background: digit ? 'var(--field-focus)' : 'var(--field)',
+                      border: `1px solid ${
+                        digit
+                          ? 'color-mix(in oklab, var(--accent) 45%, transparent)'
+                          : 'var(--line)'
+                      }`,
+                      color: 'var(--ink)',
+                      fontSize: '18px',
+                      fontWeight: 600,
+                      letterSpacing: 0,
+                    }}
+                    onFocusCapture={(e) => {
+                      e.currentTarget.style.borderColor =
+                        'color-mix(in oklab, var(--accent) 45%, transparent)';
+                      e.currentTarget.style.boxShadow =
+                        '0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent)';
+                    }}
+                    onBlurCapture={(e) => {
+                      e.currentTarget.style.boxShadow = 'none';
+                      if (!e.currentTarget.value) {
+                        e.currentTarget.style.borderColor = 'var(--line)';
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+
+              {error && (
+                <p
+                  className="text-center"
+                  style={{ fontSize: '12px', color: '#EF4444', marginBottom: '8px' }}
+                >
+                  {error}
+                </p>
+              )}
+
+              {loading && (
+                <div
+                  className="flex items-center justify-center gap-2 mb-3"
+                  style={{ color: 'var(--ink-mute)', fontSize: '13px' }}
+                >
+                  <Loader2 size={14} className="animate-spin" />
+                  正在验证…
+                </div>
+              )}
+
+              <div
+                className="flex items-center justify-between"
+                style={{ fontSize: '12.5px', color: 'var(--ink-mute)' }}
+              >
+                {countdown > 0 ? (
+                  <span>{countdown} 秒后可重新发送</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={loading}
+                    style={{
+                      color: 'var(--accent)',
+                      fontWeight: 500,
+                    }}
+                    className="hover:underline disabled:opacity-50"
+                  >
+                    重新发送验证码
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('email');
+                    setError(null);
+                    setCode(['', '', '', '', '', '']);
+                  }}
+                  className="hover:text-[var(--ink)]"
+                  style={{ color: 'var(--ink-mute)' }}
+                >
+                  换个邮箱
+                </button>
               </div>
             </>
           )}
