@@ -27,26 +27,42 @@ export async function GET() {
   }
 
   const admin = getAdmin();
-  const { data, error } = await admin
+
+  // 拉 chat_messages 做分组（fallback 标题用）
+  const { data: msgs, error: msgErr } = await admin
     .from('chat_messages')
     .select('conversation_id, role, content, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: true });
 
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+  if (msgErr) {
+    return Response.json({ error: msgErr.message }, { status: 500 });
   }
 
-  // 按 conversation_id 分组：取第一条 user 消息做标题，max created_at 做时间
-  const map = new Map<string, { id: string; title: string; last_active: string }>();
-  for (const m of (data as RawMsg[]) ?? []) {
+  // 拉 conversations 拿 AI 生成的标题
+  const { data: convsRow } = await admin
+    .from('conversations')
+    .select('id, title, updated_at')
+    .eq('user_id', user.id);
+
+  const titleMap = new Map<string, string>();
+  for (const c of convsRow ?? []) {
+    if (c.title) titleMap.set(c.id, c.title);
+  }
+
+  // 按 conversation_id 分组：第一条 user 消息做 fallback 标题，max created_at 做时间
+  const map = new Map<
+    string,
+    { id: string; title: string; last_active: string }
+  >();
+  for (const m of (msgs as RawMsg[]) ?? []) {
     const text =
       (m.content as { text?: string } | null)?.text?.toString().trim() ?? '';
     if (!map.has(m.conversation_id)) {
-      if (m.role !== 'user') continue; // 等到第一条 user 消息出现再建条目
+      if (m.role !== 'user') continue;
       map.set(m.conversation_id, {
         id: m.conversation_id,
-        title: text.slice(0, 30) || '新对话',
+        title: titleMap.get(m.conversation_id) ?? (text.slice(0, 30) || '新对话'),
         last_active: m.created_at,
       });
     } else {
