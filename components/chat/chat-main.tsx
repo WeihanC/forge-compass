@@ -123,6 +123,11 @@ export function ChatMain({
                 key={msg.id}
                 role={msg.role as 'user' | 'assistant'}
                 content={msg.content}
+                toolInvocations={
+                  msg.toolInvocations as
+                    | { toolName: string; state: string; result?: unknown }[]
+                    | undefined
+                }
               />
             ))}
 

@@ -1,58 +1,206 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Sparkles, Copy, ThumbsUp, ThumbsDown, RotateCw, ExternalLink } from 'lucide-react';
+import { Sparkles, Copy, ThumbsUp, ThumbsDown, RotateCw } from 'lucide-react';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface MessageProps {
   role: 'user' | 'assistant';
   content: string;
+  toolInvocations?: { toolName: string; state: string; result?: unknown }[];
 }
 
-type Source = { n: number; title: string; url?: string };
+type SourceData = {
+  n: number;
+  title: string;
+  url?: string;
+  excerpt?: string;
+};
 
-// 把 AI 输出末尾的 "**来源** ..." 块拆出来，返回 { main, sources }
-function splitSources(content: string): { main: string; sources: Source[] } {
-  // 容忍三种分隔：\n---\n**来源**\n、\n**来源**\n、\n## 来源\n
-  const match = content.match(/\n(?:---\s*\n)?(?:\*\*来源\*\*|## 来源|来源)\s*\n([\s\S]*)$/);
+// ─────────────────────────── 工具：从 toolInvocations 里抽 URL→excerpt 映射
+function buildExcerptMap(
+  invocations?: { toolName: string; state: string; result?: unknown }[],
+): Map<string, { title?: string; excerpt?: string }> {
+  const map = new Map<string, { title?: string; excerpt?: string }>();
+  if (!invocations) return map;
+
+  for (const inv of invocations) {
+    if (inv.state !== 'result' || !inv.result) continue;
+    const r = inv.result as { results?: unknown };
+    if (!Array.isArray(r.results)) continue;
+
+    if (inv.toolName === 'web_search') {
+      for (const item of r.results as Array<{
+        title?: string;
+        url?: string;
+        content?: string;
+      }>) {
+        if (item.url) {
+          map.set(item.url, { title: item.title, excerpt: item.content });
+        }
+      }
+    } else if (inv.toolName === 'search_knowledge_base') {
+      for (const item of r.results as Array<{
+        title?: string;
+        source_url?: string;
+        chunk?: string;
+      }>) {
+        if (item.source_url) {
+          map.set(item.source_url, { title: item.title, excerpt: item.chunk });
+        }
+      }
+    }
+  }
+  return map;
+}
+
+// ─────────────────────────── 拆 "**来源** ..." 块
+function splitSources(
+  content: string,
+  excerptMap: Map<string, { title?: string; excerpt?: string }>,
+): { main: string; sources: SourceData[] } {
+  const match = content.match(
+    /\n(?:---\s*\n)?(?:\*\*来源\*\*|## 来源|来源)\s*\n([\s\S]*)$/,
+  );
   if (!match) return { main: content, sources: [] };
 
   const block = match[1];
-  const sources: Source[] = [];
+  const sources: SourceData[] = [];
   for (const line of block.split('\n')) {
     const m = line.match(/^\s*\[(\d+)\]\s*(.+?)(?:\s+[—\-–]\s+(https?:\/\/\S+))?\s*$/);
     if (m) {
+      const url = m[3];
+      const enriched = url ? excerptMap.get(url) : undefined;
       sources.push({
         n: parseInt(m[1], 10),
-        title: m[2].trim(),
-        url: m[3],
+        title: enriched?.title ?? m[2].trim(),
+        url,
+        excerpt: enriched?.excerpt,
       });
     }
   }
-
   if (sources.length === 0) return { main: content, sources: [] };
   return { main: content.slice(0, match.index).trimEnd(), sources };
 }
 
-// 递归把 [N] 替换为 accent 上标
-function renderWithCitations(node: React.ReactNode): React.ReactNode {
+// ─────────────────────────── 来源预览卡（HoverCard 桌面 / Popover 移动）
+function CitePreview({
+  source,
+  children,
+}: {
+  source: SourceData;
+  children: React.ReactNode;
+}) {
+  const [canHover, setCanHover] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCanHover(window.matchMedia('(hover: hover)').matches);
+    }
+  }, []);
+
+  if (!source.url) return <>{children}</>;
+
+  const card = (
+    <div className="text-left">
+      <div className="font-semibold text-ink text-[13px] mb-1.5 leading-snug">
+        {source.title || source.url}
+      </div>
+      {source.excerpt && (
+        <div className="text-[12px] text-ink-mute leading-relaxed mb-2">
+          {source.excerpt.slice(0, 80)}
+          {source.excerpt.length > 80 ? '…' : ''}
+        </div>
+      )}
+      <a
+        href={source.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block text-[11.5px] text-[var(--accent)] hover:underline truncate"
+      >
+        {source.url}
+      </a>
+    </div>
+  );
+
+  if (canHover) {
+    return (
+      <HoverCard openDelay={150} closeDelay={120}>
+        <HoverCardTrigger asChild>
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline align-middle"
+          >
+            {children}
+          </a>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80 p-3" sideOffset={6}>
+          {card}
+        </HoverCardContent>
+      </HoverCard>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" className="inline-block align-middle">
+          {children}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-3" sideOffset={6}>
+        {card}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ─────────────────────────── 行内 [N] badge
+function InlineCitation({ source }: { source: SourceData }) {
+  return (
+    <CitePreview source={source}>
+      <span
+        className="inline-flex items-center justify-center font-semibold align-middle mx-0.5 cursor-pointer transition-transform duration-150 hover:scale-110"
+        style={{
+          width: '14px',
+          height: '14px',
+          borderRadius: '50%',
+          background: 'var(--bubble)',
+          color: 'var(--ink-mute)',
+          fontSize: '9.5px',
+        }}
+      >
+        {source.n}
+      </span>
+    </CitePreview>
+  );
+}
+
+// ─────────────────────────── 递归处理 [N] 为 InlineCitation
+function renderWithCitations(
+  node: React.ReactNode,
+  sources: SourceData[],
+): React.ReactNode {
   if (typeof node === 'string') {
     const parts = node.split(/(\[\d+\])/g);
     if (parts.length === 1) return node;
     return parts.map((part, i) => {
       const match = part.match(/^\[(\d+)\]$/);
       if (match) {
-        return (
-          <sup
-            key={i}
-            className="text-[10.5px] font-semibold ml-0.5 cursor-pointer"
-            style={{ color: 'var(--accent)' }}
-            title={`来源 ${match[1]}`}
-          >
-            [{match[1]}]
-          </sup>
-        );
+        const n = parseInt(match[1], 10);
+        const source = sources.find((s) => s.n === n);
+        if (!source) return part;
+        return <InlineCitation key={i} source={source} />;
       }
       return part;
     });
@@ -61,24 +209,26 @@ function renderWithCitations(node: React.ReactNode): React.ReactNode {
     const element = node as React.ReactElement<{ children?: React.ReactNode }>;
     const children = element.props.children;
     if (children == null) return node;
-    const processed = React.Children.map(children, renderWithCitations);
+    const processed = React.Children.map(children, (c) =>
+      renderWithCitations(c, sources),
+    );
     return React.cloneElement(element, {}, ...(processed ?? []));
   }
   if (Array.isArray(node)) {
-    return node.map((child, i) =>
-      React.isValidElement(child)
-        ? React.cloneElement(renderWithCitations(child) as React.ReactElement, { key: i })
-        : renderWithCitations(child),
+    return node.map((c, i) =>
+      React.isValidElement(c)
+        ? React.cloneElement(
+            renderWithCitations(c, sources) as React.ReactElement,
+            { key: i },
+          )
+        : renderWithCitations(c, sources),
     );
   }
   return node;
 }
 
-function CitationChildren({ children }: { children?: React.ReactNode }) {
-  return <>{renderWithCitations(children)}</>;
-}
-
-export function Message({ role, content }: MessageProps) {
+// ─────────────────────────── 主组件
+export function Message({ role, content, toolInvocations }: MessageProps) {
   const isUser = role === 'user';
 
   if (isUser) {
@@ -102,7 +252,12 @@ export function Message({ role, content }: MessageProps) {
     );
   }
 
-  const { main, sources } = splitSources(content);
+  const excerptMap = buildExcerptMap(toolInvocations);
+  const { main, sources } = splitSources(content, excerptMap);
+
+  const wrap = (children: React.ReactNode) => (
+    <>{renderWithCitations(children, sources)}</>
+  );
 
   return (
     <div className="py-3.5 group">
@@ -126,17 +281,13 @@ export function Message({ role, content }: MessageProps) {
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              p: ({ children }) => (
-                <p className="mb-3">
-                  <CitationChildren>{children}</CitationChildren>
-                </p>
-              ),
+              p: ({ children }) => <p className="mb-3">{wrap(children)}</p>,
               h1: ({ children }) => (
                 <h3
                   className="font-semibold text-ink"
                   style={{ fontSize: '15.5px', margin: '18px 0 8px' }}
                 >
-                  <CitationChildren>{children}</CitationChildren>
+                  {wrap(children)}
                 </h3>
               ),
               h2: ({ children }) => (
@@ -144,7 +295,7 @@ export function Message({ role, content }: MessageProps) {
                   className="font-semibold text-ink"
                   style={{ fontSize: '15.5px', margin: '18px 0 8px' }}
                 >
-                  <CitationChildren>{children}</CitationChildren>
+                  {wrap(children)}
                 </h3>
               ),
               h3: ({ children }) => (
@@ -152,11 +303,14 @@ export function Message({ role, content }: MessageProps) {
                   className="font-semibold text-ink"
                   style={{ fontSize: '15.5px', margin: '18px 0 8px' }}
                 >
-                  <CitationChildren>{children}</CitationChildren>
+                  {wrap(children)}
                 </h3>
               ),
               ul: ({ children }) => (
-                <ul className="list-disc" style={{ paddingLeft: '22px', margin: '0 0 14px' }}>
+                <ul
+                  className="list-disc"
+                  style={{ paddingLeft: '22px', margin: '0 0 14px' }}
+                >
                   {children}
                 </ul>
               ),
@@ -169,8 +323,11 @@ export function Message({ role, content }: MessageProps) {
                 </ol>
               ),
               li: ({ children }) => (
-                <li className="marker:text-ink-faint" style={{ marginBottom: '4px' }}>
-                  <CitationChildren>{children}</CitationChildren>
+                <li
+                  className="marker:text-ink-faint"
+                  style={{ marginBottom: '4px' }}
+                >
+                  {wrap(children)}
                 </li>
               ),
               strong: ({ children }) => (
@@ -199,10 +356,16 @@ export function Message({ role, content }: MessageProps) {
               ),
               td: ({ children }) => (
                 <td className="border border-line px-3 py-2 text-ink-mute text-[13px]">
-                  <CitationChildren>{children}</CitationChildren>
+                  {wrap(children)}
                 </td>
               ),
-              code: ({ children, className }: { children?: React.ReactNode; className?: string }) => {
+              code: ({
+                children,
+                className,
+              }: {
+                children?: React.ReactNode;
+                className?: string;
+              }) => {
                 const isBlock = className?.startsWith('language-');
                 if (isBlock) {
                   return (
@@ -241,10 +404,10 @@ export function Message({ role, content }: MessageProps) {
             style={{ borderTop: '1px solid var(--line-soft)' }}
           >
             <span className="text-[11.5px] text-ink-faint mr-1">信息来源</span>
-            {sources.map((s) => {
-              const inner = (
+            {sources.map((s) => (
+              <CitePreview key={s.n} source={s}>
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-2 py-[3px] text-[11.5px] text-ink-mute hover:bg-hover hover:text-ink"
+                  className="inline-flex items-center gap-1.5 rounded-full px-2 py-[3px] text-[11.5px] text-ink-mute hover:bg-hover hover:text-ink cursor-pointer transition-colors"
                   style={{
                     border: '1px solid var(--line)',
                     background: 'var(--surface)',
@@ -264,28 +427,9 @@ export function Message({ role, content }: MessageProps) {
                     {s.n}
                   </span>
                   <span className="truncate max-w-[200px]">{s.title}</span>
-                  {s.url && <ExternalLink size={10} className="text-ink-faint" />}
                 </span>
-              );
-              if (s.url) {
-                return (
-                  <a
-                    key={s.n}
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={s.url}
-                  >
-                    {inner}
-                  </a>
-                );
-              }
-              return (
-                <span key={s.n} title={s.title}>
-                  {inner}
-                </span>
-              );
-            })}
+              </CitePreview>
+            ))}
           </div>
         )}
 
