@@ -1,96 +1,119 @@
 'use client';
 
-import { Paperclip, ArrowUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { useState } from 'react';
+import { ArrowUp, Paperclip, Globe, Sparkles } from 'lucide-react';
 
 interface InputAreaProps {
   input: string;
   isLoading: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onValueChange?: (value: string) => void;
 }
 
-export function InputArea({
-  input,
-  isLoading,
-  onInputChange,
-  onSubmit,
-}: InputAreaProps) {
+export function InputArea({ input, isLoading, onInputChange, onSubmit }: InputAreaProps) {
+  const [focused, setFocused] = useState(false);
+  const hasText = input.trim().length > 0;
+  const canSend = hasText && !isLoading;
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (!isLoading && input.trim()) {
+      if (canSend) {
         onSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
       }
     }
   }
 
   return (
-    <TooltipProvider>
-      <div className="border-t border-border bg-background px-4 py-3">
-        <div className="max-w-3xl mx-auto">
-          <form onSubmit={onSubmit}>
-            <div className="relative rounded-xl border border-border bg-background focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/30 transition-all">
-              <Textarea
-                value={input}
-                onChange={onInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder="输入问题…"
-                disabled={isLoading}
-                rows={3}
-                className="min-h-[80px] max-h-[300px] resize-none border-0 shadow-none focus-visible:ring-0 pr-12 pl-3 pt-3 pb-10 text-[15px] leading-[1.6]"
-                onInput={(e) => {
-                  const el = e.currentTarget;
-                  el.style.height = 'auto';
-                  el.style.height = `${Math.min(el.scrollHeight, 300)}px`;
-                }}
-              />
+    <form onSubmit={onSubmit} className="max-w-[740px] mx-auto">
+      <div
+        className="flex items-end gap-1.5"
+        style={{
+          background: 'var(--surface)',
+          border: `1px solid ${
+            focused
+              ? 'color-mix(in oklab, var(--accent) 35%, var(--line))'
+              : 'var(--line)'
+          }`,
+          borderRadius: '22px',
+          padding: '6px 6px 6px 18px',
+          boxShadow: focused
+            ? '0 1px 4px rgba(0,0,0,.04), 0 0 0 4px color-mix(in oklab, var(--accent) 12%, transparent)'
+            : '0 1px 4px rgba(0,0,0,.04)',
+          transition: 'border-color 0.15s, box-shadow 0.15s',
+        }}
+      >
+        <textarea
+          value={input}
+          onChange={onInputChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder="问出海罗盘任何关于宠物用品出海的问题…"
+          disabled={isLoading}
+          rows={1}
+          className="flex-1 bg-transparent border-0 outline-none resize-none text-ink placeholder:text-ink-faint"
+          style={{
+            fontSize: '14.5px',
+            lineHeight: 1.55,
+            padding: '12px 0',
+            maxHeight: '200px',
+          }}
+          onInput={(e) => {
+            const el = e.currentTarget;
+            el.style.height = 'auto';
+            el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+          }}
+        />
 
-              {/* 左下角：附件按钮（disabled） */}
-              <div className="absolute bottom-2 left-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      disabled
-                      className="h-7 w-7 text-muted-foreground opacity-40"
-                    >
-                      <Paperclip size={14} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>附件（即将开放）</TooltipContent>
-                </Tooltip>
-              </div>
-
-              {/* 右下角：发送按钮 */}
-              <div className="absolute bottom-2 right-2">
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={isLoading || !input.trim()}
-                  className="h-7 w-7 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30"
-                >
-                  <ArrowUp size={14} />
-                </Button>
-              </div>
-            </div>
-          </form>
-
-          <p className="text-center text-[11px] text-muted-foreground mt-2">
-            Enter 换行 · Ctrl+Enter 发送
-          </p>
+        {/* 左下角工具按钮（仅 UI） */}
+        <div className="flex items-center gap-0.5 pb-1.5">
+          <button
+            type="button"
+            title="附件（即将开放）"
+            disabled
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-ink-mute opacity-40"
+          >
+            <Paperclip size={16} />
+          </button>
+          <button
+            type="button"
+            title="联网搜索（默认开启）"
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-hover"
+            style={{
+              color: 'var(--accent)',
+              background: 'color-mix(in oklab, var(--accent) 10%, transparent)',
+            }}
+          >
+            <Globe size={16} />
+          </button>
+          <button
+            type="button"
+            title="深度思考"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-ink-mute hover:bg-hover hover:text-ink"
+          >
+            <Sparkles size={16} />
+          </button>
         </div>
+
+        {/* 右下角发送按钮 */}
+        <button
+          type="submit"
+          disabled={!canSend}
+          title="发送（Enter）"
+          className="rounded-[9px] flex items-center justify-center transition-all"
+          style={{
+            width: '34px',
+            height: '34px',
+            marginBottom: '6px',
+            background: canSend ? 'var(--accent)' : 'var(--send-ink)',
+            color: canSend ? '#fff' : 'var(--surface)',
+            opacity: canSend ? 1 : 0.25,
+          }}
+        >
+          <ArrowUp size={16} />
+        </button>
       </div>
-    </TooltipProvider>
+    </form>
   );
 }
