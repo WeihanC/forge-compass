@@ -44,16 +44,27 @@ export async function GET(
     return Response.json({ error: 'forbidden' }, { status: 403 });
   }
 
-  // 映射为 ai-sdk Message 格式
+  // 映射为 ai-sdk Message 格式；assistant 消息额外保留 toolCalls / toolResults
+  // 给前端用于还原 toolInvocations（用于来源 pill 摘录显示）
   const messages = data
     .filter((m) => m.role === 'user' || m.role === 'assistant')
     .map((m) => {
-      const c = m.content as { text?: string } | null;
-      return {
+      const c = m.content as
+        | { text?: string; toolCalls?: unknown[]; toolResults?: unknown[] }
+        | null;
+      const base = {
         id: m.id,
         role: m.role as 'user' | 'assistant',
         content: c?.text ?? '',
       };
+      if (m.role === 'assistant') {
+        return {
+          ...base,
+          toolCalls: Array.isArray(c?.toolCalls) ? c!.toolCalls : [],
+          toolResults: Array.isArray(c?.toolResults) ? c!.toolResults : [],
+        };
+      }
+      return base;
     });
 
   return Response.json({ messages });

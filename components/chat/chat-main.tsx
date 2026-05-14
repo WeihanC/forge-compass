@@ -118,18 +118,26 @@ export function ChatMain({
           </div>
         ) : (
           <>
-            {messages.map((msg) => (
-              <Message
-                key={msg.id}
-                role={msg.role as 'user' | 'assistant'}
-                content={msg.content}
-                toolInvocations={
-                  msg.toolInvocations as
-                    | { toolName: string; state: string; result?: unknown }[]
-                    | undefined
-                }
-              />
-            ))}
+            {messages.map((msg) => {
+              const m = msg as AiMessage & {
+                toolCalls?: { toolCallId?: string; toolName: string; args?: unknown }[];
+                toolResults?: { toolCallId?: string; toolName?: string; result?: unknown }[];
+              };
+              return (
+                <Message
+                  key={m.id}
+                  role={m.role as 'user' | 'assistant'}
+                  content={m.content}
+                  toolInvocations={
+                    m.toolInvocations as
+                      | { toolName: string; state: string; result?: unknown }[]
+                      | undefined
+                  }
+                  toolCalls={m.toolCalls}
+                  toolResults={m.toolResults}
+                />
+              );
+            })}
 
             {showPlaceholder && (
               <div className="py-3.5">

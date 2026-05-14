@@ -11,10 +11,36 @@ import {
 } from '@/components/ui/hover-card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
+type ToolInvocation = { toolName: string; state: string; result?: unknown };
+type StoredToolCall = { toolCallId?: string; toolName: string; args?: unknown };
+type StoredToolResult = { toolCallId?: string; toolName?: string; result?: unknown };
+
 interface MessageProps {
   role: 'user' | 'assistant';
   content: string;
-  toolInvocations?: { toolName: string; state: string; result?: unknown }[];
+  // 实时流式：ai-sdk 直接给的 toolInvocations
+  toolInvocations?: ToolInvocation[];
+  // 历史回放：从 chat_messages.content 还原的原始 toolCalls / toolResults 对
+  toolCalls?: StoredToolCall[];
+  toolResults?: StoredToolResult[];
+}
+
+// 把 DB 存的 (toolCalls, toolResults) 对还原成 ai-sdk 风格的 toolInvocations
+function buildToolInvocations(
+  toolCalls?: StoredToolCall[],
+  toolResults?: StoredToolResult[],
+): ToolInvocation[] {
+  if (!toolCalls || toolCalls.length === 0) return [];
+  return toolCalls.map((call) => {
+    const matched =
+      call.toolCallId &&
+      toolResults?.find((r) => r.toolCallId && r.toolCallId === call.toolCallId);
+    return {
+      toolName: call.toolName,
+      state: matched ? 'result' : 'call',
+      result: matched ? matched.result : undefined,
+    };
+  });
 }
 
 type SourceData = {
@@ -26,7 +52,7 @@ type SourceData = {
 
 // ─────────────────────────── 工具：从 toolInvocations 里抽 URL→excerpt 映射
 function buildExcerptMap(
-  invocations?: { toolName: string; state: string; result?: unknown }[],
+  invocations?: ToolInvocation[],
 ): Map<string, { title?: string; excerpt?: string }> {
   const map = new Map<string, { title?: string; excerpt?: string }>();
   if (!invocations) return map;
@@ -236,7 +262,13 @@ function renderWithCitations(
 }
 
 // ─────────────────────────── 主组件
-export function Message({ role, content, toolInvocations }: MessageProps) {
+export function Message({
+  role,
+  content,
+  toolInvocations,
+  toolCalls,
+  toolResults,
+}: MessageProps) {
   const isUser = role === 'user';
 
   if (isUser) {
@@ -260,7 +292,12 @@ export function Message({ role, content, toolInvocations }: MessageProps) {
     );
   }
 
-  const excerptMap = buildExcerptMap(toolInvocations);
+  // 优先用流式提供的 toolInvocations；历史消息回放时从 toolCalls/toolResults 还原
+  const invocations =
+    toolInvocations && toolInvocations.length > 0
+      ? toolInvocations
+      : buildToolInvocations(toolCalls, toolResults);
+  const excerptMap = buildExcerptMap(invocations);
   const { main, sources } = splitSources(content, excerptMap);
 
   const wrap = (children: React.ReactNode) => (
